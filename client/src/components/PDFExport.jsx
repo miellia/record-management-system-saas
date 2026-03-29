@@ -43,8 +43,9 @@ const PDFExport = ({ record, isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          <div ref={targetRef} className="bg-white p-8 rounded-xl border border-gray-200" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="flex-1 overflow-auto p-4 sm:p-6 bg-gray-50">
+          <div className="w-full overflow-x-auto">
+            <div ref={targetRef} className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 min-w-[700px] mx-auto" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
 
             {/* Title */}
             <div className="border-b-2 border-indigo-600 pb-4 mb-6">
@@ -70,9 +71,9 @@ const PDFExport = ({ record, isOpen, onClose }) => {
                 ['Request Date', fmtDate(record.requestDate)],
                 ['Received By', checkList(record.requestReceivedBy)],
               ].map(([label, val]) => (
-                <div key={label} className="flex border-b border-gray-50 py-1.5">
-                  <span className="text-gray-500 font-medium w-2/5">{label}</span>
-                  <span className="text-gray-800 font-semibold">{val || '—'}</span>
+                <div key={label} className="flex border-b border-gray-50 py-1.5 items-start">
+                  <span className="text-gray-500 font-medium w-2/5 shrink-0 pr-2">{label}</span>
+                  <span className="text-gray-800 font-semibold break-words">{val || '—'}</span>
                 </div>
               ))}
             </div>
@@ -90,9 +91,9 @@ const PDFExport = ({ record, isOpen, onClose }) => {
                 ['Agency', record.requestingAgency],
                 ['Branch', record.branchOffice],
               ].map(([label, val]) => (
-                <div key={label} className="flex border-b border-gray-50 py-1.5">
-                  <span className="text-gray-500 font-medium w-2/5">{label}</span>
-                  <span className="text-gray-800">{val || '—'}</span>
+                <div key={label} className="flex border-b border-gray-50 py-1.5 items-start">
+                  <span className="text-gray-500 font-medium w-2/5 shrink-0 pr-2">{label}</span>
+                  <span className="text-gray-800 break-words">{val || '—'}</span>
                 </div>
               ))}
             </div>
@@ -110,9 +111,9 @@ const PDFExport = ({ record, isOpen, onClose }) => {
                 ['Survey Date', fmtDate(record.dateOfSurvey)],
                 ['Report Date', fmtDate(record.dateOfReport)],
               ].map(([label, val]) => (
-                <div key={label} className="flex border-b border-gray-50 py-1.5">
-                  <span className="text-gray-500 font-medium w-2/5">{label}</span>
-                  <span className="text-gray-800">{val || '—'}</span>
+                <div key={label} className="flex border-b border-gray-50 py-1.5 items-start">
+                  <span className="text-gray-500 font-medium w-2/5 shrink-0 pr-2">{label}</span>
+                  <span className="text-gray-800 break-words">{val || '—'}</span>
                 </div>
               ))}
             </div>
@@ -128,13 +129,14 @@ const PDFExport = ({ record, isOpen, onClose }) => {
                 ['Paid', record.paid],
                 ['Date', fmtDate(record.date)],
               ].map(([label, val]) => (
-                <div key={label} className="flex border-b border-gray-50 py-1.5">
-                  <span className="text-gray-500 font-medium w-2/5">{label}</span>
-                  <span className="text-gray-800 font-semibold">{val || '—'}</span>
+                <div key={label} className="flex border-b border-gray-50 py-1.5 items-start">
+                  <span className="text-gray-500 font-medium w-2/5 shrink-0 pr-2">{label}</span>
+                  <span className="text-gray-800 font-semibold break-words">{val || '—'}</span>
                 </div>
               ))}
             </div>
 
+            </div>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { format } from 'date-fns'
-import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLeft, FiChevronRight, FiRefreshCw } from 'react-icons/fi'
 import RecordForm from '../components/RecordForm'
 import PDFExport from '../components/PDFExport'
 
@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [viewRecord, setViewRecord] = useState(null)
   const [page, setPage] = useState(1)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const perPage = 10
   const navigate = useNavigate()
 
@@ -44,11 +45,16 @@ const Dashboard = () => {
   }, [search, records])
 
   const fetchRecords = async () => {
+    setIsRefreshing(true)
     try {
       const { data } = await axios.get(API)
       setRecords(data)
       setFiltered(data)
-    } catch (err) { console.error(err) }
+    } catch (err) { 
+      console.error(err) 
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   const logout = () => { sessionStorage.removeItem('auth'); navigate('/') }
@@ -132,6 +138,9 @@ const Dashboard = () => {
             </div>
             <button className="hidden sm:block relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors shrink-0">
               <FiBell size={18} /><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            <button onClick={fetchRecords} disabled={isRefreshing} className="relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors shrink-0 disabled:opacity-50" title="Refresh records">
+              <FiRefreshCw size={18} className={isRefreshing ? "animate-spin text-indigo-600" : ""} />
             </button>
             <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-black text-white text-sm font-semibold rounded-xl transition-all active:scale-95 shrink-0 whitespace-nowrap" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
               <FiPlus size={15} /> <span className="hidden sm:inline">Add Record</span><span className="sm:hidden">Add</span>

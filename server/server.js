@@ -24,16 +24,24 @@ app.use('/api/records', recordRoutes);
 app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://miellia26:admin0413@newera.fxz3fhy.mongodb.net/?appName=NewEra";
 
-// Seed admin users
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("MONGO_URI is missing in .env");
+  process.exit(1);
+}
+
+// Seed admin users using credentials from .env
 const seedAdmins = async () => {
   const admins = [
-    { username: 'admin', password: 'admin0413' },
-    { username: 'jawed', password: 'jawed0321' }
+    { username: process.env.ADMIN_USERNAME, password: process.env.ADMIN_PASSWORD },
+    { username: process.env.ADMIN2_USERNAME, password: process.env.ADMIN2_PASSWORD }
   ];
 
   for (const admin of admins) {
+    if (!admin.username || !admin.password) continue; // skip if env missing
+
     const exists = await Admin.findOne({ username: admin.username });
     if (!exists) {
       await Admin.create(admin);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { FiX, FiCheck } from 'react-icons/fi'
 import axios from 'axios'
 
-const API = 'http://localhost:5000/api/records'
+const API = `${import.meta.env.VITE_API_URL}/api/records`;
 
 /**
  * Initial empty state for the record form.

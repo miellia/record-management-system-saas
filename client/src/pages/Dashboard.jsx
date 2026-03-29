@@ -6,7 +6,10 @@ import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLe
 import RecordForm from '../components/RecordForm'
 import PDFExport from '../components/PDFExport'
 
-const API = 'http://localhost:5000/api/records'
+//const API = `${process.env.REACT_APP_API_URL}/api/records`;
+const API = `${import.meta.env.VITE_API_URL}/api/records`;
+
+
 
 const Dashboard = () => {
   const [records, setRecords] = useState([])
@@ -29,10 +32,10 @@ const Dashboard = () => {
       const flat = { ...r }
       // flatten nested objects for search
       if (r.requestReceivedBy) {
-        flat.requestReceivedByStr = Object.entries(r.requestReceivedBy).filter(([,v]) => v === true).map(([k]) => k).join(' ')
+        flat.requestReceivedByStr = Object.entries(r.requestReceivedBy).filter(([, v]) => v === true).map(([k]) => k).join(' ')
       }
       if (r.dispatchedOn) {
-        flat.dispatchedOnStr = Object.entries(r.dispatchedOn).filter(([,v]) => v === true).map(([k]) => k).join(' ')
+        flat.dispatchedOnStr = Object.entries(r.dispatchedOn).filter(([, v]) => v === true).map(([k]) => k).join(' ')
       }
       return Object.values(flat).some(v => String(v).toLowerCase().includes(q))
     }))

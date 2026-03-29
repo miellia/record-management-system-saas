@@ -15,13 +15,13 @@ const Login = () => {
     e.preventDefault()
     setLoading(true)
     try {
-      await axios.post('http://localhost:5000/api/auth/login', { username, password })
-      sessionStorage.setItem('auth', 'true')
-      navigate('/dashboard')
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, { username, password });
+      sessionStorage.setItem('auth', 'true');
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid username or password')
+      setError(err.response?.data?.message || 'Invalid username or password');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 

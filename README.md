@@ -80,10 +80,7 @@ npm run dev
 
 ### 4. Admin Credentials
 
-You can log in using either of the seeded admin accounts:
 
-- **Username:** `admin` | **Password:** `admin0413`
-- **Username:** `jawed` | **Password:** `jawed0321`
 
 ## 📋 Data Schema
 

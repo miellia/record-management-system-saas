@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { format } from 'date-fns'
-import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLeft, FiChevronRight, FiRefreshCw } from 'react-icons/fi'
+import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLeft, FiChevronRight, FiRefreshCw, FiX, FiTrash2 } from 'react-icons/fi'
 import RecordForm from '../components/RecordForm'
 import PDFExport from '../components/PDFExport'
 
@@ -22,25 +22,92 @@ const Dashboard = () => {
   const [page, setPage] = useState(1)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [searchResults, setSearchResults] = useState([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [highlightTerm, setHighlightTerm] = useState('')
   const perPage = 10
   const navigate = useNavigate()
 
   useEffect(() => { fetchRecords() }, [])
 
   useEffect(() => {
-    if (!search.trim()) { setFiltered(records); setPage(1); return }
+    if (!search.trim()) { 
+      setFiltered(records); 
+      setPage(1); 
+      setSearchResults([]);
+      setShowDropdown(false);
+      return 
+    }
+    
     const q = search.toLowerCase()
-    setFiltered(records.filter(r => {
+    const fieldLabels = {
+      serialNumber: 'Serial #',
+      referenceNumber: 'Ref #',
+      name: 'Name',
+      position: 'Position',
+      landline: 'Landline',
+      mobile: 'Mobile',
+      email: 'Email',
+      address: 'Address',
+      requestingAgency: 'Agency',
+      branchOffice: 'Branch',
+      titleCustomer: 'Title/Customer',
+      propertyDetails: 'Property',
+      propertyOwner: 'Owner',
+      contactPerson: 'Contact Person',
+      contactNumber: 'Contact Number',
+      surveyorName: 'Surveyor',
+      reportStatus: 'Status',
+      fsv: 'FSV',
+      market: 'Market',
+      invoiceAmount: 'Invoice',
+      paid: 'Paid'
+    }
+
+    const matches = []
+    const filteredList = records.filter(r => {
+      let isMatch = false
       const flat = { ...r }
-      // flatten nested objects for search
+      
+      // Check each field to identify the category
+      Object.entries(fieldLabels).forEach(([key, label]) => {
+        const val = String(r[key] || '').toLowerCase()
+        if (val.includes(q)) {
+          isMatch = true
+          // Add to results dropdown (limit to unique record-field pairs)
+          matches.push({
+            id: r._id,
+            record: r,
+            field: label,
+            value: String(r[key]),
+            term: q
+          })
+        }
+      })
+
+      // Special case for nested strings (requestReceivedBy, dispatchedOn)
       if (r.requestReceivedBy) {
-        flat.requestReceivedByStr = Object.entries(r.requestReceivedBy).filter(([, v]) => v === true).map(([k]) => k).join(' ')
+        const str = Object.entries(r.requestReceivedBy).filter(([, v]) => v === true).map(([k]) => k).join(' ')
+        if (str.toLowerCase().includes(q)) {
+          isMatch = true
+          matches.push({ id: r._id, record: r, field: 'Received By', value: str, term: q })
+        }
       }
+
       if (r.dispatchedOn) {
-        flat.dispatchedOnStr = Object.entries(r.dispatchedOn).filter(([, v]) => v === true).map(([k]) => k).join(' ')
+        const str = Object.entries(r.dispatchedOn).filter(([, v]) => v === true).map(([k]) => k).join(' ')
+        if (str.toLowerCase().includes(q)) {
+          isMatch = true
+          matches.push({ id: r._id, record: r, field: 'Dispatched On', value: str, term: q })
+        }
       }
-      return Object.values(flat).some(v => String(v).toLowerCase().includes(q))
-    }))
+      
+      return isMatch
+    })
+
+    setFiltered(filteredList)
+    setSearchResults(matches.slice(0, 8)) // Limit dropdown results
+    setShowDropdown(matches.length > 0)
     setPage(1)
   }, [search, records])
 
@@ -58,9 +125,22 @@ const Dashboard = () => {
   }
 
   const logout = () => { sessionStorage.removeItem('auth'); navigate('/') }
-  const openAdd = () => { setEditRecord(null); setFormOpen(true) }
-  const openEdit = (r) => { setEditRecord(r); setFormOpen(true) }
-  const openView = (r) => { setViewRecord(r); setViewOpen(true) }
+  const openAdd = () => { setEditRecord(null); setHighlightTerm(''); setFormOpen(true) }
+  const openEdit = (r, term = '') => { setEditRecord(r); setHighlightTerm(term); setFormOpen(true); setShowDropdown(false) }
+  const openView = (r, term = '') => { setViewRecord(r); setHighlightTerm(term); setViewOpen(true); setShowDropdown(false) }
+  
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      try {
+        await axios.delete(`${API}/${id}`)
+        fetchRecords()
+      } catch (err) {
+        console.error('Delete error:', err)
+        const msg = err.response?.data?.message || err.message || 'Unknown error'
+        alert(`Error deleting record: ${msg}`)
+      }
+    }
+  }
 
   const fmtDate = (d) => {
     if (!d) return '-'
@@ -134,7 +214,41 @@ const Dashboard = () => {
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative w-full sm:w-72">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input type="text" placeholder="Search all fields..." className="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-xl text-sm outline-none border-none focus:bg-white focus:ring-2 focus:ring-indigo-200 transition-all" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <input 
+                type="text" 
+                placeholder="Search all fields..." 
+                className="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-xl text-sm outline-none border-none focus:bg-white focus:ring-2 focus:ring-indigo-200 transition-all font-medium" 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+                onFocus={() => search.trim() && setShowDropdown(true)}
+              />
+              
+              {/* Search Dropdown */}
+              {showDropdown && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[100] max-h-80 overflow-y-auto">
+                  <div className="p-2 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2">Top Matches</span>
+                    <button onClick={() => setShowDropdown(false)} className="text-gray-300 hover:text-gray-500 p-1"><FiX size={12} /></button>
+                  </div>
+                  <div className="py-1">
+                    {searchResults.map((res, i) => (
+                      <button 
+                        key={`${res.id}-${i}`}
+                        className="w-full px-4 py-2.5 text-left hover:bg-indigo-50/50 flex flex-col gap-0.5 transition-colors group border-b border-gray-50 last:border-0"
+                        onClick={() => openView(res.record, res.term)}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-tight">{res.field}</span>
+                          <span className="text-[9px] text-gray-300 font-mono">{res.record.referenceNumber || 'N/A'}</span>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-700 truncate group-hover:text-indigo-700">
+                          <HighlightedText text={res.value} highlight={res.term} />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <button className="hidden sm:block relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors shrink-0">
               <FiBell size={18} /><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -209,6 +323,9 @@ const Dashboard = () => {
                             <button onClick={() => openEdit(rec)} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" title="Edit">
                               <FiEdit2 size={15} />
                             </button>
+                            <button onClick={() => handleDelete(rec._id)} className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                              <FiTrash2 size={15} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -247,10 +364,35 @@ const Dashboard = () => {
         </div>
       </main>
 
-      <RecordForm isOpen={formOpen} onClose={() => setFormOpen(false)} recordToEdit={editRecord} refreshRecords={fetchRecords} />
-      <PDFExport isOpen={viewOpen} onClose={() => setViewOpen(false)} record={viewRecord} />
+      <RecordForm isOpen={formOpen} onClose={() => setFormOpen(false)} recordToEdit={editRecord} refreshRecords={fetchRecords} searchTerm={highlightTerm} />
+      <PDFExport isOpen={viewOpen} onClose={() => setViewOpen(false)} record={viewRecord} searchTerm={highlightTerm} />
     </div>
   )
+}
+
+/**
+ * Highlighter component for text strings
+ */
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const HighlightedText = ({ text, highlight }) => {
+  if (!highlight || !highlight.trim()) return <span>{text}</span>
+  
+  try {
+    const escaped = escapeRegex(highlight)
+    const parts = String(text).split(new RegExp(`(${escaped})`, 'gi'))
+    return (
+      <span>
+        {parts.map((p, i) => 
+          p.toLowerCase() === highlight.toLowerCase() 
+            ? <mark key={i} className="bg-yellow-200 text-gray-900 rounded-sm px-0.5">{p}</mark> 
+            : p
+        )}
+      </span>
+    )
+  } catch {
+    return <span>{text}</span>
+  }
 }
 
 export default Dashboard

@@ -37,7 +37,7 @@ const fmtDate = (d) => d ? new Date(d).toISOString().split('T')[0] : ''
  * @param {object|null} recordToEdit - If populated, the form is in 'Edit' mode
  * @param {function} refreshRecords - Callback to re-fetch the records list
  */
-const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
+const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords, searchTerm = '' }) => {
   const [form, setForm] = useState({ ...emptyForm })
   const [loading, setLoading] = useState(false)
 
@@ -85,7 +85,11 @@ const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
     }
   }
 
-  const inputCls = "w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+  const inputCls = (name) => {
+    const base = "w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none text-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
+    const hasMatch = searchTerm && String(form[name] || '').toLowerCase().includes(searchTerm.toLowerCase())
+    return hasMatch ? `${base} bg-yellow-100 border-yellow-400 ring-2 ring-yellow-100` : `${base} bg-white`
+  }
   const checkCls = "w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
 
   return (
@@ -114,15 +118,15 @@ const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Serial Number</label>
-                  <input name="serialNumber" value={form.serialNumber} onChange={onChange} className={inputCls} placeholder="e.g. 001" />
+                  <input name="serialNumber" value={form.serialNumber} onChange={onChange} className={inputCls('serialNumber')} placeholder="e.g. 001" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Request Date</label>
-                  <input type="date" name="requestDate" value={form.requestDate} onChange={onChange} className={inputCls} />
+                  <input type="date" name="requestDate" value={form.requestDate} onChange={onChange} className={inputCls('requestDate')} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Reference Number</label>
-                  <input name="referenceNumber" value={form.referenceNumber} onChange={onChange} className={inputCls} placeholder="REF-001" />
+                  <input name="referenceNumber" value={form.referenceNumber} onChange={onChange} className={inputCls('referenceNumber')} placeholder="REF-001" />
                 </div>
               </div>
 
@@ -135,12 +139,15 @@ const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
                     { key: 'phone', label: 'Phone' },
                     { key: 'whatsapp', label: 'WhatsApp' },
                     { key: 'other', label: 'Other' },
-                  ].map(opt => (
-                    <label key={opt.key} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
-                      <input type="checkbox" checked={form.requestReceivedBy[opt.key]} onChange={() => onCheckbox('requestReceivedBy', opt.key)} className={checkCls} />
-                      {opt.label}
-                    </label>
-                  ))}
+                  ].map(opt => {
+                    const isHighlighted = searchTerm && opt.label.toLowerCase().includes(searchTerm.toLowerCase()) && form.requestReceivedBy[opt.key]
+                    return (
+                      <label key={opt.key} className={`flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none px-2 py-1 rounded-lg transition-colors ${isHighlighted ? 'bg-yellow-100 ring-1 ring-yellow-300' : ''}`}>
+                        <input type="checkbox" checked={form.requestReceivedBy[opt.key]} onChange={() => onCheckbox('requestReceivedBy', opt.key)} className={checkCls} />
+                        {opt.label}
+                      </label>
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -150,37 +157,39 @@ const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
               <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-100 pb-2">Requester Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Name</label>
-                  <input name="name" value={form.name} onChange={onChange} className={inputCls} placeholder="Full Name" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Position</label>
-                  <input name="position" value={form.position} onChange={onChange} className={inputCls} placeholder="e.g. Manager" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Landline</label>
-                  <input name="landline" value={form.landline} onChange={onChange} className={inputCls} placeholder="Landline number" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Mobile</label>
-                  <input name="mobile" value={form.mobile} onChange={onChange} className={inputCls} placeholder="Mobile number" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Email</label>
-                  <input type="email" name="email" value={form.email} onChange={onChange} className={inputCls} placeholder="email@example.com" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Address</label>
-                  <input name="address" value={form.address} onChange={onChange} className={inputCls} placeholder="Address of requester" />
-                </div>
-                <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Requesting Agency</label>
-                  <input name="requestingAgency" value={form.requestingAgency} onChange={onChange} className={inputCls} placeholder="Agency name" />
+                  <input name="requestingAgency" value={form.requestingAgency} onChange={onChange} className={inputCls('requestingAgency')} placeholder="Agency name" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Branch Office</label>
-                  <input name="branchOffice" value={form.branchOffice} onChange={onChange} className={inputCls} placeholder="Branch name" />
+                  <input name="branchOffice" value={form.branchOffice} onChange={onChange} className={inputCls('branchOffice')} placeholder="Branch name" />
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Name</label>
+                  <input name="name" value={form.name} onChange={onChange} className={inputCls('name')} placeholder="Full Name" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Position</label>
+                  <input name="position" value={form.position} onChange={onChange} className={inputCls('position')} placeholder="e.g. Manager" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Landline</label>
+                  <input name="landline" value={form.landline} onChange={onChange} className={inputCls('landline')} placeholder="Landline number" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Mobile</label>
+                  <input name="mobile" value={form.mobile} onChange={onChange} className={inputCls('mobile')} placeholder="Mobile number" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Email</label>
+                  <input type="email" name="email" value={form.email} onChange={onChange} className={inputCls('email')} placeholder="email@example.com" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Address</label>
+                  <input name="address" value={form.address} onChange={onChange} className={inputCls('address')} placeholder="Address of requester" />
+                </div>
+
+
               </div>
             </div>
 
@@ -190,35 +199,35 @@ const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Title / Customer</label>
-                  <input name="titleCustomer" value={form.titleCustomer} onChange={onChange} className={inputCls} placeholder="Title or customer name" />
+                  <input name="titleCustomer" value={form.titleCustomer} onChange={onChange} className={inputCls('titleCustomer')} placeholder="Title or customer name" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Property Details</label>
-                  <input name="propertyDetails" value={form.propertyDetails} onChange={onChange} className={inputCls} placeholder="Property description" />
+                  <input name="propertyDetails" value={form.propertyDetails} onChange={onChange} className={inputCls('propertyDetails')} placeholder="Property description" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Property Owner</label>
-                  <input name="propertyOwner" value={form.propertyOwner} onChange={onChange} className={inputCls} placeholder="Owner name" />
+                  <input name="propertyOwner" value={form.propertyOwner} onChange={onChange} className={inputCls('propertyOwner')} placeholder="Owner name" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Contact Person</label>
-                  <input name="contactPerson" value={form.contactPerson} onChange={onChange} className={inputCls} placeholder="Contact person name" />
+                  <input name="contactPerson" value={form.contactPerson} onChange={onChange} className={inputCls('contactPerson')} placeholder="Contact person name" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Contact Number</label>
-                  <input name="contactNumber" value={form.contactNumber} onChange={onChange} className={inputCls} placeholder="Contact phone" />
+                  <input name="contactNumber" value={form.contactNumber} onChange={onChange} className={inputCls('contactNumber')} placeholder="Contact phone" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Surveyor Name</label>
-                  <input name="surveyorName" value={form.surveyorName} onChange={onChange} className={inputCls} placeholder="Surveyor name" />
+                  <input name="surveyorName" value={form.surveyorName} onChange={onChange} className={inputCls('surveyorName')} placeholder="Surveyor name" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Date of Survey</label>
-                  <input type="date" name="dateOfSurvey" value={form.dateOfSurvey} onChange={onChange} className={inputCls} />
+                  <input type="date" name="dateOfSurvey" value={form.dateOfSurvey} onChange={onChange} className={inputCls('dateOfSurvey')} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Date of Report</label>
-                  <input type="date" name="dateOfReport" value={form.dateOfReport} onChange={onChange} className={inputCls} />
+                  <input type="date" name="dateOfReport" value={form.dateOfReport} onChange={onChange} className={inputCls('dateOfReport')} />
                 </div>
               </div>
             </div>
@@ -229,7 +238,7 @@ const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5">Report Status</label>
-                  <select name="reportStatus" value={form.reportStatus} onChange={onChange} className={inputCls + " bg-white"}>
+                  <select name="reportStatus" value={form.reportStatus} onChange={onChange} className={inputCls('reportStatus')}>
                     <option value="">Select Status</option>
                     <option value="Completed">Completed</option>
                     <option value="In Progress">In Progress</option>
@@ -242,12 +251,15 @@ const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
                       { key: 'whatsapp', label: 'WhatsApp' },
                       { key: 'email', label: 'Email' },
                       { key: 'courier', label: 'Courier' },
-                    ].map(opt => (
-                      <label key={opt.key} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
-                        <input type="checkbox" checked={form.dispatchedOn[opt.key]} onChange={() => onCheckbox('dispatchedOn', opt.key)} className={checkCls} />
-                        {opt.label}
-                      </label>
-                    ))}
+                    ].map(opt => {
+                      const isHighlighted = searchTerm && opt.label.toLowerCase().includes(searchTerm.toLowerCase()) && form.dispatchedOn[opt.key]
+                      return (
+                        <label key={opt.key} className={`flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none px-2 py-1 rounded-lg transition-colors ${isHighlighted ? 'bg-yellow-100 ring-1 ring-yellow-300' : ''}`}>
+                          <input type="checkbox" checked={form.dispatchedOn[opt.key]} onChange={() => onCheckbox('dispatchedOn', opt.key)} className={checkCls} />
+                          {opt.label}
+                        </label>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -259,19 +271,19 @@ const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-indigo-800 mb-1.5">FSV</label>
-                  <input name="fsv" value={form.fsv} onChange={onChange} className={inputCls + " bg-white"} placeholder="FSV value" />
+                  <input name="fsv" value={form.fsv} onChange={onChange} className={inputCls('fsv')} placeholder="FSV value" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-indigo-800 mb-1.5">Market</label>
-                  <input name="market" value={form.market} onChange={onChange} className={inputCls + " bg-white"} placeholder="Market value" />
+                  <input name="market" value={form.market} onChange={onChange} className={inputCls('market')} placeholder="Market value" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-indigo-800 mb-1.5">Invoice Amount</label>
-                  <input name="invoiceAmount" value={form.invoiceAmount} onChange={onChange} className={inputCls + " bg-white"} placeholder="Amount" />
+                  <input name="invoiceAmount" value={form.invoiceAmount} onChange={onChange} className={inputCls('invoiceAmount')} placeholder="Amount" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-indigo-800 mb-1.5">Paid</label>
-                  <select name="paid" value={form.paid} onChange={onChange} className={inputCls + " bg-white"}>
+                  <select name="paid" value={form.paid} onChange={onChange} className={inputCls('paid')}>
                     <option value="">Select</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
@@ -279,7 +291,7 @@ const RecordForm = ({ isOpen, onClose, recordToEdit, refreshRecords }) => {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-indigo-800 mb-1.5">Date</label>
-                  <input type="date" name="date" value={form.date} onChange={onChange} className={inputCls + " bg-white"} />
+                  <input type="date" name="date" value={form.date} onChange={onChange} className={inputCls('date')} />
                 </div>
               </div>
             </div>

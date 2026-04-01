@@ -46,9 +46,23 @@ const updateRecord = async (req, res) => {
   }
 };
 
+// Delete a record
+const deleteRecord = async (req, res) => {
+  try {
+    const deleted = await Record.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ message: 'Record not found' });
+    }
+    res.status(200).json({ message: 'Record deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getRecords,
   createRecord,
   getRecordById,
-  updateRecord
+  updateRecord,
+  deleteRecord
 };

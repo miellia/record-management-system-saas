@@ -14,7 +14,21 @@ const checkList = (obj) => {
   return active.length ? active.join(', ') : '—'
 }
 
-const PDFExport = ({ record, isOpen, onClose }) => {
+const Highlight = ({ text, highlight }) => {
+  if (!highlight || !highlight.trim()) return <span>{text || '—'}</span>
+  const parts = String(text || '—').split(new RegExp(`(${highlight})`, 'gi'))
+  return (
+    <span>
+      {parts.map((p, i) => 
+        p.toLowerCase() === highlight.toLowerCase() 
+          ? <mark key={i} className="bg-yellow-200 text-gray-900 rounded-sm px-0.5">{p}</mark> 
+          : p
+      )}
+    </span>
+  )
+}
+
+const PDFExport = ({ record, isOpen, onClose, searchTerm = '' }) => {
   const { toPDF, targetRef } = usePDF({
     filename: `${record?.name || 'Record'}_Report.pdf`
   })
@@ -73,7 +87,9 @@ const PDFExport = ({ record, isOpen, onClose }) => {
               ].map(([label, val]) => (
                 <div key={label} className="flex border-b border-gray-50 py-1.5 items-start">
                   <span className="text-gray-500 font-medium w-2/5 shrink-0 pr-2">{label}</span>
-                  <span className="text-gray-800 font-semibold break-words">{val || '—'}</span>
+                  <span className="text-gray-800 font-semibold break-words">
+                    <Highlight text={val} highlight={searchTerm} />
+                  </span>
                 </div>
               ))}
             </div>
@@ -93,7 +109,9 @@ const PDFExport = ({ record, isOpen, onClose }) => {
               ].map(([label, val]) => (
                 <div key={label} className="flex border-b border-gray-50 py-1.5 items-start">
                   <span className="text-gray-500 font-medium w-2/5 shrink-0 pr-2">{label}</span>
-                  <span className="text-gray-800 break-words">{val || '—'}</span>
+                  <span className="text-gray-800 break-words">
+                    <Highlight text={val} highlight={searchTerm} />
+                  </span>
                 </div>
               ))}
             </div>
@@ -113,7 +131,9 @@ const PDFExport = ({ record, isOpen, onClose }) => {
               ].map(([label, val]) => (
                 <div key={label} className="flex border-b border-gray-50 py-1.5 items-start">
                   <span className="text-gray-500 font-medium w-2/5 shrink-0 pr-2">{label}</span>
-                  <span className="text-gray-800 break-words">{val || '—'}</span>
+                  <span className="text-gray-800 break-words">
+                    <Highlight text={val} highlight={searchTerm} />
+                  </span>
                 </div>
               ))}
             </div>
@@ -131,7 +151,9 @@ const PDFExport = ({ record, isOpen, onClose }) => {
               ].map(([label, val]) => (
                 <div key={label} className="flex border-b border-gray-50 py-1.5 items-start">
                   <span className="text-gray-500 font-medium w-2/5 shrink-0 pr-2">{label}</span>
-                  <span className="text-gray-800 font-semibold break-words">{val || '—'}</span>
+                  <span className="text-gray-800 font-semibold break-words">
+                    <Highlight text={val} highlight={searchTerm} />
+                  </span>
                 </div>
               ))}
             </div>

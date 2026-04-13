@@ -2,23 +2,25 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiEye, FiEyeOff, FiSun, FiMoon } from 'react-icons/fi'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 import axios from 'axios'
 
 const Login = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
+  const { login } = useAuth()
 
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, { username, password });
-      sessionStorage.setItem('auth', 'true');
+      await login(username, password, rememberMe);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid username or password');
@@ -119,7 +121,13 @@ const Login = () => {
           </div>
 
           <div className="flex items-center ml-1">
-            <input type="checkbox" id="remember" className="w-4 h-4 rounded border-gray-300 dark:border-slate-700 dark:bg-slate-800 mr-2" />
+            <input 
+              type="checkbox" 
+              id="remember" 
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 dark:border-slate-700 dark:bg-slate-800 mr-2" 
+            />
             <label htmlFor="remember" className="text-sm text-gray-500 dark:text-slate-400 cursor-pointer">Remember me</label>
           </div>
 

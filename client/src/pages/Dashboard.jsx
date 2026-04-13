@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLeft, FiChevronRight, FiRefreshCw, FiX, FiTrash2, FiSun, FiMoon, FiCalendar, FiBriefcase } from 'react-icons/fi'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 import axios from 'axios'
 import RecordForm from '../components/RecordForm'
 import PDFExport from '../components/PDFExport'
@@ -45,6 +46,7 @@ const Dashboard = () => {
   ]
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
+  const { logout } = useAuth()
 
   // Dynamically derived agency list — auto-updates when new records are added
   const agencies = useMemo(() => {
@@ -169,7 +171,10 @@ const Dashboard = () => {
     }
   }
 
-  const logout = () => { sessionStorage.removeItem('auth'); navigate('/') }
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  }
   const openAdd = () => { setEditRecord(null); setHighlightTerm(''); setFormOpen(true) }
   const openEdit = (r, term = '') => { setEditRecord(r); setHighlightTerm(term); setFormOpen(true); setShowDropdown(false) }
   const openView = (r, term = '') => { setViewRecord(r); setHighlightTerm(term); setViewOpen(true); setShowDropdown(false) }
@@ -307,7 +312,7 @@ const Dashboard = () => {
               <p className="text-sm font-semibold text-gray-800 dark:text-slate-200 truncate">Admin</p>
               <p className="text-xs text-gray-400 dark:text-slate-500 truncate">System Manager</p>
             </div>
-            <button onClick={logout} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+            <button onClick={handleLogout} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
               <FiLogOut size={16} />
             </button>
           </div>

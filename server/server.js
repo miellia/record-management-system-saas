@@ -7,6 +7,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 // Route Imports
@@ -17,8 +18,23 @@ const Admin = require('./models/adminModel');
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',') 
+  : ['http://localhost:5173'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
 app.use(express.json()); // Parses incoming JSON payloads
+app.use(cookieParser()); // Parses cookies for JWT extraction
 
 app.use('/api/records', recordRoutes);
 app.use('/api/auth', authRoutes);

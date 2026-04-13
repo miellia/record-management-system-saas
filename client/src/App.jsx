@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import { ThemeProvider } from './context/ThemeContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 
 /**
  * ProtectedRoute Component
@@ -11,9 +12,14 @@ import { ThemeProvider } from './context/ThemeContext'
  * If unauthorized, redirects the user to the Login page.
  */
 const ProtectedRoute = ({ children }) => {
-  const isAuth = sessionStorage.getItem('auth') === 'true'
-  return isAuth ? children : <Navigate to="/" />
-}
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-950 font-sans text-indigo-600">Loading...</div>; // Could be a nicer spinner
+  }
+  
+  return isAuthenticated ? children : <Navigate to="/" />;
+};
 
 /**
  * Main App Component
@@ -22,22 +28,24 @@ const ProtectedRoute = ({ children }) => {
 const App = () => {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Route: Login Page */}
-          <Route path="/" element={<Login />} />
-          
-          {/* Protected Route: Admin Dashboard */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Route: Login Page */}
+            <Route path="/" element={<Login />} />
+            
+            {/* Protected Route: Admin Dashboard */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   )
 }

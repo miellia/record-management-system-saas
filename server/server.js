@@ -4,6 +4,7 @@
  * Configures the Express application, sets up middleware (CORS, JSON parsing),
  * connects to MongoDB Atlas, and defines the API endpoints for records and authentication.
  */
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -17,30 +18,23 @@ const Admin = require('./models/adminModel');
 
 const app = express();
 
-// Middleware
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',') 
-  : ['http://localhost:5173'];
+// ✅ REQUIRED for Render (fixes secure cookies behind proxy)
+app.set('trust proxy', 1);
 
+// ✅ Simplified & correct CORS for Vercel → Render
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.FRONTEND_URL,
   credentials: true,
 }));
 
 app.use(express.json()); // Parses incoming JSON payloads
 app.use(cookieParser()); // Parses cookies for JWT extraction
 
+// Routes
 app.use('/api/records', recordRoutes);
 app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5000;
-
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
@@ -56,7 +50,7 @@ const seedAdmins = async () => {
   ];
 
   for (const admin of admins) {
-    if (!admin.username || !admin.password) continue; // skip if env missing
+    if (!admin.username || !admin.password) continue;
 
     const exists = await Admin.findOne({ username: admin.username });
     if (!exists) {

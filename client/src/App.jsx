@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import { ThemeProvider } from './context/ThemeContext'
 
 /**
  * ProtectedRoute Component
@@ -20,22 +21,24 @@ const ProtectedRoute = ({ children }) => {
  */
 const App = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Route: Login Page */}
-        <Route path="/" element={<Login />} />
-        
-        {/* Protected Route: Admin Dashboard */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Route: Login Page */}
+          <Route path="/" element={<Login />} />
+          
+          {/* Protected Route: Admin Dashboard */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
 

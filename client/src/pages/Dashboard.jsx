@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLeft, FiChevronRight, FiRefreshCw, FiX, FiTrash2, FiSun, FiMoon, FiCalendar } from 'react-icons/fi'
+import { useTheme } from '../context/ThemeContext'
 import axios from 'axios'
-import { format } from 'date-fns'
-import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLeft, FiChevronRight, FiRefreshCw, FiX, FiTrash2 } from 'react-icons/fi'
 import RecordForm from '../components/RecordForm'
 import PDFExport from '../components/PDFExport'
 
@@ -25,14 +25,42 @@ const Dashboard = () => {
   const [searchResults, setSearchResults] = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [highlightTerm, setHighlightTerm] = useState('')
+  const [selectedMonth, setSelectedMonth] = useState('')
   const perPage = 10
+
+  const MONTHS = [
+    { value: '0', label: 'January' },
+    { value: '1', label: 'February' },
+    { value: '2', label: 'March' },
+    { value: '3', label: 'April' },
+    { value: '4', label: 'May' },
+    { value: '5', label: 'June' },
+    { value: '6', label: 'July' },
+    { value: '7', label: 'August' },
+    { value: '8', label: 'September' },
+    { value: '9', label: 'October' },
+    { value: '10', label: 'November' },
+    { value: '11', label: 'December' },
+  ]
   const navigate = useNavigate()
+  const { theme, toggleTheme } = useTheme()
 
   useEffect(() => { fetchRecords() }, [])
 
   useEffect(() => {
+    let result = [...records]
+
+    // Month filter (based on requestDate)
+    if (selectedMonth !== '') {
+      result = result.filter(r => {
+        if (!r.requestDate) return false
+        const d = new Date(r.requestDate)
+        return d.getMonth() === parseInt(selectedMonth)
+      })
+    }
+
     if (!search.trim()) { 
-      setFiltered(records); 
+      setFiltered(result); 
       setPage(1); 
       setSearchResults([]);
       setShowDropdown(false);
@@ -65,7 +93,7 @@ const Dashboard = () => {
     }
 
     const matches = []
-    const filteredList = records.filter(r => {
+    const filteredList = result.filter(r => {
       let isMatch = false
       const flat = { ...r }
       
@@ -109,7 +137,7 @@ const Dashboard = () => {
     setSearchResults(matches.slice(0, 8)) // Limit dropdown results
     setShowDropdown(matches.length > 0)
     setPage(1)
-  }, [search, records])
+  }, [search, records, selectedMonth])
 
   const fetchRecords = async () => {
     setIsRefreshing(true)
@@ -157,7 +185,7 @@ const Dashboard = () => {
   const paginated = filtered.slice((page - 1) * perPage, page * perPage)
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-slate-950 font-sans overflow-hidden transition-colors duration-300">
       
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
@@ -168,31 +196,31 @@ const Dashboard = () => {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-white flex flex-col border-r border-gray-100 shrink-0`}>
-        <div className="p-5 flex items-center justify-between gap-3 border-b border-gray-50">
+      <aside className={`fixed inset-y-0 left-0 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-white dark:bg-slate-900 flex flex-col border-r border-gray-100 dark:border-slate-800 shrink-0`}>
+        <div className="p-5 flex items-center justify-between gap-3 border-b border-gray-50 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-lg"
               style={{ background: 'linear-gradient(135deg, #6366f1, #818cf8)' }}>N</div>
-            <span className="text-lg font-bold text-gray-800 tracking-tight">New Era System</span>
+            <span className="text-lg font-bold text-gray-800 dark:text-slate-100 tracking-tight">New Era System</span>
           </div>
-          <button className="md:hidden text-gray-400 hover:text-gray-600" onClick={() => setSidebarOpen(false)}>
+          <button className="md:hidden text-gray-400 hover:text-gray-600 dark:hover:text-slate-300" onClick={() => setSidebarOpen(false)}>
             <FiMenu size={20} />
           </button>
         </div>
         <nav className="flex-1 px-3 py-6 space-y-1">
-          <a href="#" className="flex items-center gap-3 px-4 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-medium">
+          <a href="#" className="flex items-center gap-3 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-medium">
             <FiMenu size={16} /> Dashboard
           </a>
         </nav>
-        <div className="p-3 border-t border-gray-100">
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-indigo-700"
-              style={{ background: 'linear-gradient(135deg, #c7d2fe, #e9d5ff)' }}>A</div>
+        <div className="p-3 border-t border-gray-100 dark:border-slate-800">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-xl">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-indigo-700 dark:text-indigo-300"
+              style={{ background: theme === 'dark' ? 'linear-gradient(135deg, #312e81, #4c1d95)' : 'linear-gradient(135deg, #c7d2fe, #e9d5ff)' }}>A</div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">Admin</p>
-              <p className="text-xs text-gray-400 truncate">System Manager</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-slate-200 truncate">Admin</p>
+              <p className="text-xs text-gray-400 dark:text-slate-500 truncate">System Manager</p>
             </div>
-            <button onClick={logout} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+            <button onClick={logout} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
               <FiLogOut size={16} />
             </button>
           </div>
@@ -201,23 +229,30 @@ const Dashboard = () => {
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:px-6 sm:h-16 shrink-0 gap-4 sm:gap-0">
+        <header className="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:px-6 sm:h-16 shrink-0 gap-4 sm:gap-0 transition-colors duration-300">
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button className="md:hidden p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors" onClick={() => setSidebarOpen(true)}>
+            <button className="md:hidden p-2 -ml-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors" onClick={() => setSidebarOpen(true)}>
               <FiMenu size={20} />
             </button>
-            <h1 className="text-xl font-bold text-gray-800 flex-1">Records List</h1>
-            <button className="sm:hidden relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors">
+            <h1 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex-1">Records List</h1>
+            <button className="sm:hidden relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-colors">
               <FiBell size={18} /><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
+            <button 
+              onClick={toggleTheme}
+              className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95"
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <FiMoon size={20} /> : <FiSun size={20} className="text-amber-400" />}
+            </button>
             <div className="relative w-full sm:w-72">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input 
                 type="text" 
                 placeholder="Search all fields..." 
-                className="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-xl text-sm outline-none border-none focus:bg-white focus:ring-2 focus:ring-indigo-200 transition-all font-medium" 
+                className="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl text-sm outline-none border-none focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-900/50 transition-all font-medium text-gray-700 dark:text-slate-200" 
                 value={search} 
                 onChange={(e) => setSearch(e.target.value)} 
                 onFocus={() => search.trim() && setShowDropdown(true)}
@@ -225,8 +260,8 @@ const Dashboard = () => {
               
               {/* Search Dropdown */}
               {showDropdown && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[100] max-h-80 overflow-y-auto">
-                  <div className="p-2 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-100 dark:border-slate-700 overflow-hidden z-[100] max-h-80 overflow-y-auto">
+                  <div className="p-2 border-b border-gray-50 dark:border-slate-700 flex justify-between items-center bg-gray-50/50 dark:bg-slate-900/50">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2">Top Matches</span>
                     <button onClick={() => setShowDropdown(false)} className="text-gray-300 hover:text-gray-500 p-1"><FiX size={12} /></button>
                   </div>
@@ -234,14 +269,14 @@ const Dashboard = () => {
                     {searchResults.map((res, i) => (
                       <button 
                         key={`${res.id}-${i}`}
-                        className="w-full px-4 py-2.5 text-left hover:bg-indigo-50/50 flex flex-col gap-0.5 transition-colors group border-b border-gray-50 last:border-0"
+                        className="w-full px-4 py-2.5 text-left hover:bg-indigo-50/50 dark:hover:bg-slate-700/50 flex flex-col gap-0.5 transition-colors group border-b border-gray-50 dark:border-slate-700 last:border-0"
                         onClick={() => openView(res.record, res.term)}
                       >
                         <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-tight">{res.field}</span>
-                          <span className="text-[9px] text-gray-300 font-mono">{res.record.referenceNumber || 'N/A'}</span>
+                          <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-tight">{res.field}</span>
+                          <span className="text-[9px] text-gray-300 dark:text-slate-500 font-mono">{res.record.referenceNumber || 'N/A'}</span>
                         </div>
-                        <div className="text-sm font-semibold text-gray-700 truncate group-hover:text-indigo-700">
+                        <div className="text-sm font-semibold text-gray-700 dark:text-slate-200 truncate group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
                           <HighlightedText text={res.value} highlight={res.term} />
                         </div>
                       </button>
@@ -250,114 +285,134 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            <button className="hidden sm:block relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors shrink-0">
+            {/* Month Filter Dropdown */}
+            <div className="relative shrink-0">
+              <FiCalendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 pointer-events-none" size={14} />
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="pl-8 pr-8 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl text-sm outline-none border-none focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-900/50 transition-all font-medium text-gray-700 dark:text-slate-200 appearance-none cursor-pointer"
+              >
+                <option value="">All Months</option>
+                {MONTHS.map(m => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+              {selectedMonth !== '' && (
+                <button
+                  onClick={() => setSelectedMonth('')}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-red-500 rounded-full transition-colors"
+                  title="Clear month filter"
+                >
+                  <FiX size={12} />
+                </button>
+              )}
+            </div>
+            <button className="hidden sm:block relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-xl transition-colors shrink-0">
               <FiBell size={18} /><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-            <button onClick={fetchRecords} disabled={isRefreshing} className="relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors shrink-0 disabled:opacity-50" title="Refresh records">
+            <button onClick={fetchRecords} disabled={isRefreshing} className="relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-xl transition-colors shrink-0 disabled:opacity-50" title="Refresh records">
               <FiRefreshCw size={18} className={isRefreshing ? "animate-spin text-indigo-600" : ""} />
             </button>
-            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-black text-white text-sm font-semibold rounded-xl transition-all active:scale-95 shrink-0 whitespace-nowrap" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+            <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all active:scale-95 shrink-0 whitespace-nowrap" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
               <FiPlus size={15} /> <span className="hidden sm:inline">Add Record</span><span className="sm:hidden">Add</span>
             </button>
           </div>
         </header>
 
-        <div className="flex-1 p-4 sm:p-6 overflow-auto">
-          <p className="text-sm text-gray-500 mb-4">
-            Showing <span className="font-semibold text-gray-800">{filtered.length}</span> record{filtered.length !== 1 && 's'}
-          </p>
-
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr className="text-xs text-gray-500 uppercase tracking-wider">
-                    <th className="px-4 py-3 font-semibold">S.No</th>
-                    <th className="px-4 py-3 font-semibold hidden md:table-cell">Ref #</th>
-                    <th className="px-4 py-3 font-semibold">Name</th>
-                    <th className="px-4 py-3 font-semibold hidden md:table-cell">Agency</th>
-                    <th className="px-4 py-3 font-semibold hidden md:table-cell">Property</th>
-                    <th className="px-4 py-3 font-semibold hidden lg:table-cell">Surveyor</th>
-                    <th className="px-4 py-3 font-semibold hidden sm:table-cell">Survey Date</th>
-                    <th className="px-4 py-3 font-semibold text-center">Status</th>
-                    <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">Paid</th>
-                    <th className="px-4 py-3 font-semibold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {paginated.length > 0 ? paginated.map((rec, i) => {
-                    const st = statusBadge(rec.reportStatus)
-                    return (
-                      <tr key={rec._id} className="hover:bg-indigo-50/30 transition-colors group">
-                        <td className="px-4 py-3 text-gray-600 font-medium">{rec.serialNumber || (page - 1) * perPage + i + 1}</td>
-                        <td className="px-4 py-3 hidden md:table-cell">
-                          <span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-mono text-gray-600 border border-gray-200">{rec.referenceNumber || '-'}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 shrink-0" style={{ background: 'linear-gradient(135deg, #e0e7ff, #ede9fe)' }}>
-                              {(rec.name || '?').charAt(0)}
+        <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            
+            {/* Table Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-300">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50/50 dark:bg-slate-800/50 text-[11px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider border-b border-gray-100 dark:border-slate-800">
+                      <th className="px-5 py-4 font-bold">S.No</th>
+                      <th className="px-4 py-4 font-bold">Name & Position</th>
+                      <th className="px-4 py-4 font-bold hidden md:table-cell">Agency</th>
+                      <th className="px-4 py-4 font-bold hidden md:table-cell">Property</th>
+                      <th className="px-4 py-4 font-bold hidden lg:table-cell">Surveyor</th>
+                      <th className="px-4 py-4 font-bold hidden sm:table-cell">Survey Date</th>
+                      <th className="px-4 py-4 font-bold text-center">Status</th>
+                      <th className="px-4 py-4 font-bold text-center hidden sm:table-cell">Paid</th>
+                      <th className="px-4 py-4 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginated.length > 0 ? paginated.map((rec, idx) => {
+                      const st = statusBadge(rec.reportStatus)
+                      return (
+                        <tr key={rec._id} className="group hover:bg-gray-50/50 dark:hover:bg-slate-800/30 border-b border-gray-50 dark:border-slate-800 last:border-0 transition-colors">
+                          <td className="px-5 py-3 text-sm font-medium text-gray-400 dark:text-slate-600">{(page-1)*perPage + idx + 1}</td>
+                          <td className="px-4 py-3 min-w-[200px]">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-800 dark:text-slate-200">{rec.name || '-'}</span>
+                              <span className="text-xs text-gray-400 dark:text-slate-500 truncate">{rec.position || '-'}</span>
                             </div>
-                            <span className="font-semibold text-gray-800">{rec.name || '-'}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{rec.requestingAgency || '-'}</td>
-                        <td className="px-4 py-3 text-gray-600 max-w-[160px] truncate hidden md:table-cell">{rec.propertyDetails || '-'}</td>
-                        <td className="px-4 py-3 text-gray-600 hidden lg:table-cell">{rec.surveyorName || '-'}</td>
-                        <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{fmtDate(rec.dateOfSurvey)}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${st.cls}`}>
-                            {rec.reportStatus || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center hidden sm:table-cell">
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${rec.paid === 'Yes' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : rec.paid === 'No' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
-                            {rec.paid || '-'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openView(rec)} className="p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors" title="View / PDF">
-                              <FiEye size={15} />
-                            </button>
-                            <button onClick={() => openEdit(rec)} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" title="Edit">
-                              <FiEdit2 size={15} />
-                            </button>
-                            <button onClick={() => handleDelete(rec._id)} className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
-                              <FiTrash2 size={15} />
-                            </button>
-                          </div>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600 dark:text-slate-400 hidden md:table-cell text-sm">{rec.requestingAgency || '-'}</td>
+                          <td className="px-4 py-3 text-gray-600 dark:text-slate-400 max-w-[160px] truncate hidden md:table-cell text-sm">{rec.propertyDetails || '-'}</td>
+                          <td className="px-4 py-3 text-gray-600 dark:text-slate-400 hidden lg:table-cell text-sm">{rec.surveyorName || '-'}</td>
+                          <td className="px-4 py-3 text-gray-600 dark:text-slate-400 hidden sm:table-cell text-sm">{fmtDate(rec.dateOfSurvey)}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight ${st.cls}`}>
+                              {rec.reportStatus || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center hidden sm:table-cell">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight ${rec.paid === 'Yes' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : rec.paid === 'No' ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800' : 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-500 border border-gray-200 dark:border-slate-700'}`}>
+                              {rec.paid || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => openView(rec)} className="p-1.5 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg transition-colors" title="View / PDF">
+                                <FiEye size={15} />
+                              </button>
+                              <button onClick={() => openEdit(rec)} className="p-1.5 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors" title="Edit">
+                                <FiEdit2 size={15} />
+                              </button>
+                              <button onClick={() => handleDelete(rec._id)} className="p-1.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors" title="Delete">
+                                <FiTrash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    }) : (
+                      <tr>
+                        <td colSpan="10" className="px-5 py-20 text-center text-gray-400 dark:text-slate-600">
+                          <FiSearch className="mx-auto mb-3 text-gray-200 dark:text-slate-800" size={40} />
+                          <p className="font-medium text-gray-500 dark:text-slate-400">No records found</p>
+                          <p className="text-sm mt-1">Add a new record or adjust your search.</p>
                         </td>
                       </tr>
-                    )
-                  }) : (
-                    <tr>
-                      <td colSpan="10" className="px-5 py-20 text-center text-gray-400">
-                        <FiSearch className="mx-auto mb-3 text-gray-200" size={40} />
-                        <p className="font-medium text-gray-500">No records found</p>
-                        <p className="text-sm mt-1">Add a new record or adjust your search.</p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Pagination */}
-            <div className="border-t border-gray-100 px-4 sm:px-5 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500 bg-gray-50/50">
-              <span className="text-center sm:text-left">Page {page} of {totalPages}</span>
-              <div className="flex gap-1 flex-wrap justify-center">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                  <FiChevronLeft size={14} />
-                </button>
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
-                  <button key={n} onClick={() => setPage(n)} className={`px-3 py-1 rounded border transition-colors ${page === n ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
-                    {n}
+              {/* Pagination */}
+              <div className="border-t border-gray-100 dark:border-slate-800 px-4 sm:px-5 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider bg-gray-50/50 dark:bg-slate-800/30 transition-colors duration-300">
+                <span className="text-center sm:text-left">
+                  {selectedMonth !== '' && <span className="text-indigo-500 dark:text-indigo-400 mr-1.5">{MONTHS[parseInt(selectedMonth)].label} ·</span>}
+                  {filtered.length} record{filtered.length !== 1 ? 's' : ''} · Page {page} of {totalPages}
+                </span>
+                <div className="flex gap-1 flex-wrap justify-center">
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <FiChevronLeft size={14} />
                   </button>
-                ))}
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                  <FiChevronRight size={14} />
-                </button>
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
+                    <button key={n} onClick={() => setPage(n)} className={`px-3 py-1 rounded-lg border transition-colors ${page === n ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}>
+                      {n}
+                    </button>
+                  ))}
+                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <FiChevronRight size={14} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

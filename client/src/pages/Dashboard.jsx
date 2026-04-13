@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLeft, FiChevronRight, FiRefreshCw, FiX, FiTrash2, FiSun, FiMoon, FiCalendar } from 'react-icons/fi'
+import { FiSearch, FiPlus, FiLogOut, FiEdit2, FiEye, FiBell, FiMenu, FiChevronLeft, FiChevronRight, FiRefreshCw, FiX, FiTrash2, FiSun, FiMoon, FiCalendar, FiBriefcase } from 'react-icons/fi'
 import { useTheme } from '../context/ThemeContext'
 import axios from 'axios'
 import RecordForm from '../components/RecordForm'
@@ -26,6 +26,7 @@ const Dashboard = () => {
   const [showDropdown, setShowDropdown] = useState(false)
   const [highlightTerm, setHighlightTerm] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
+  const [selectedAgency, setSelectedAgency] = useState('')
   const perPage = 10
 
   const MONTHS = [
@@ -45,6 +46,17 @@ const Dashboard = () => {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
 
+  // Dynamically derived agency list — auto-updates when new records are added
+  const agencies = useMemo(() => {
+    const set = new Set()
+    records.forEach(r => {
+      if (r.requestingAgency && r.requestingAgency.trim()) {
+        set.add(r.requestingAgency.trim())
+      }
+    })
+    return [...set].sort((a, b) => a.localeCompare(b))
+  }, [records])
+
   useEffect(() => { fetchRecords() }, [])
 
   useEffect(() => {
@@ -57,6 +69,11 @@ const Dashboard = () => {
         const d = new Date(r.requestDate)
         return d.getMonth() === parseInt(selectedMonth)
       })
+    }
+
+    // Agency filter
+    if (selectedAgency !== '') {
+      result = result.filter(r => (r.requestingAgency || '').trim() === selectedAgency)
     }
 
     if (!search.trim()) { 
@@ -137,7 +154,7 @@ const Dashboard = () => {
     setSearchResults(matches.slice(0, 8)) // Limit dropdown results
     setShowDropdown(matches.length > 0)
     setPage(1)
-  }, [search, records, selectedMonth])
+  }, [search, records, selectedMonth, selectedAgency])
 
   const fetchRecords = async () => {
     setIsRefreshing(true)
@@ -207,10 +224,80 @@ const Dashboard = () => {
             <FiMenu size={20} />
           </button>
         </div>
-        <nav className="flex-1 px-3 py-6 space-y-1">
+        <nav className="flex-1 px-3 py-6 space-y-4">
           <a href="#" className="flex items-center gap-3 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-medium">
             <FiMenu size={16} /> Dashboard
           </a>
+
+          {/* Month Filter */}
+          <div className="px-1 pt-4">
+            <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-2">
+              <FiCalendar size={12} />
+              Filter by Month
+            </label>
+            <div className="relative">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-400 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all font-medium text-gray-700 dark:text-slate-200 appearance-none cursor-pointer"
+              >
+                <option value="">All Months</option>
+                {MONTHS.map(m => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+              {selectedMonth !== '' && (
+                <button
+                  onClick={() => setSelectedMonth('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  title="Clear month filter"
+                >
+                  <FiX size={12} />
+                </button>
+              )}
+            </div>
+            {selectedMonth !== '' && (
+              <div className="mt-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-between">
+                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">{MONTHS[parseInt(selectedMonth)].label}</span>
+                <span className="text-[10px] text-indigo-400 dark:text-indigo-500">{filtered.length} records</span>
+              </div>
+            )}
+          </div>
+
+          {/* Agency Filter */}
+          <div className="px-1 pt-2">
+            <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-2">
+              <FiBriefcase size={12} />
+              Filter by Agency
+            </label>
+            <div className="relative">
+              <select
+                value={selectedAgency}
+                onChange={(e) => setSelectedAgency(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-400 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all font-medium text-gray-700 dark:text-slate-200 appearance-none cursor-pointer"
+              >
+                <option value="">All Agencies</option>
+                {agencies.map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+              {selectedAgency !== '' && (
+                <button
+                  onClick={() => setSelectedAgency('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  title="Clear agency filter"
+                >
+                  <FiX size={12} />
+                </button>
+              )}
+            </div>
+            {selectedAgency !== '' && (
+              <div className="mt-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-between">
+                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 truncate">{selectedAgency}</span>
+                <span className="text-[10px] text-indigo-400 dark:text-indigo-500 shrink-0">{filtered.length}</span>
+              </div>
+            )}
+          </div>
         </nav>
         <div className="p-3 border-t border-gray-100 dark:border-slate-800">
           <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-xl">
@@ -285,29 +372,7 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            {/* Month Filter Dropdown */}
-            <div className="relative shrink-0">
-              <FiCalendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 pointer-events-none" size={14} />
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="pl-8 pr-8 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl text-sm outline-none border-none focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-900/50 transition-all font-medium text-gray-700 dark:text-slate-200 appearance-none cursor-pointer"
-              >
-                <option value="">All Months</option>
-                {MONTHS.map(m => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
-              </select>
-              {selectedMonth !== '' && (
-                <button
-                  onClick={() => setSelectedMonth('')}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-red-500 rounded-full transition-colors"
-                  title="Clear month filter"
-                >
-                  <FiX size={12} />
-                </button>
-              )}
-            </div>
+
             <button className="hidden sm:block relative p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-xl transition-colors shrink-0">
               <FiBell size={18} /><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>

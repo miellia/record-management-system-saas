@@ -52,10 +52,28 @@ const seedAdmins = async () => {
   for (const admin of admins) {
     if (!admin.username || !admin.password) continue;
 
-    const exists = await Admin.findOne({ username: admin.username });
-    if (!exists) {
+    console.log(`Seeding check for: ${admin.username}`);
+    const existingAdmin = await Admin.findOne({ username: admin.username });
+    if (!existingAdmin) {
       await Admin.create(admin);
       console.log(`Admin "${admin.username}" created`);
+    } else {
+      // ✅ Check if password needs hashing or updating
+      let shouldUpdate = false;
+      
+      // If it doesn't look like a bcrypt hash, it's plaintext
+      if (!existingAdmin.password.startsWith('$2a$')) {
+        shouldUpdate = true;
+      } else {
+        const isMatch = await existingAdmin.comparePassword(admin.password);
+        if (!isMatch) shouldUpdate = true;
+      }
+
+      if (shouldUpdate) {
+        existingAdmin.password = admin.password;
+        await existingAdmin.save(); 
+        console.log(`Password updated/hashed for admin "${admin.username}"`);
+      }
     }
   }
 };

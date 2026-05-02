@@ -400,7 +400,7 @@ const Dashboard = () => {
                   <thead>
                     <tr className="bg-gray-50/50 dark:bg-slate-800/50 text-[11px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider border-b border-gray-100 dark:border-slate-800">
                       <th className="px-5 py-4 font-bold">S.No</th>
-                      <th className="px-4 py-4 font-bold">Name & Position</th>
+                      <th className="px-4 py-4 font-bold">Title / Customer</th>
                       <th className="px-4 py-4 font-bold hidden md:table-cell">Agency</th>
                       <th className="px-4 py-4 font-bold hidden md:table-cell">Property</th>
                       <th className="px-4 py-4 font-bold hidden lg:table-cell">Surveyor</th>
@@ -418,8 +418,7 @@ const Dashboard = () => {
                           <td className="px-5 py-3 text-sm font-medium text-gray-400 dark:text-slate-600">{(page-1)*perPage + idx + 1}</td>
                           <td className="px-4 py-3 min-w-[200px]">
                             <div className="flex flex-col">
-                              <span className="font-semibold text-gray-800 dark:text-slate-200">{rec.name || '-'}</span>
-                              <span className="text-xs text-gray-400 dark:text-slate-500 truncate">{rec.position || '-'}</span>
+                              <span className="font-semibold text-gray-800 dark:text-slate-200">{rec.titleCustomer || '-'}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-gray-600 dark:text-slate-400 hidden md:table-cell text-sm">{rec.requestingAgency || '-'}</td>

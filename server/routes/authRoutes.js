@@ -20,10 +20,18 @@ const generateToken = (username, rememberMe) => {
 router.post('/login', async (req, res) => {
   try {
     const { username, password, rememberMe } = req.body;
+    console.log(`Login attempt for username: ${username}`);
 
-    const admin = await Admin.findOne({ username, password });
-
+    const admin = await Admin.findOne({ username });
     if (!admin) {
+      console.log(`Login failed: Admin ${username} not found`);
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    const isMatch = await admin.comparePassword(password);
+    console.log(`Password match result for ${username}: ${isMatch}`);
+
+    if (!isMatch) {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
